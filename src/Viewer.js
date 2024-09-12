@@ -39,19 +39,20 @@ const CONSECUTIVE_RENDERED_FRAMES_FOR_FPS_CALCULATION = 60;
 export class Viewer {
 
     constructor(options = {}) {
+        if (!options.camera) {
+            // The natural 'up' vector for viewing the scene (only has an effect when used with orbit controls and
+            // when the viewer uses its own camera).
+            if (!options.cameraUp) options.cameraUp = [0, 1, 0];
+            this.cameraUp = new THREE.Vector3().fromArray(options.cameraUp);
 
-        // The natural 'up' vector for viewing the scene (only has an effect when used with orbit controls and
-        // when the viewer uses its own camera).
-        if (!options.cameraUp) options.cameraUp = [0, 1, 0];
-        this.cameraUp = new THREE.Vector3().fromArray(options.cameraUp);
+            // The camera's initial position (only used when the viewer uses its own camera).
+            if (!options.initialCameraPosition) options.initialCameraPosition = [0, 10, 15];
+            this.initialCameraPosition = new THREE.Vector3().fromArray(options.initialCameraPosition);
 
-        // The camera's initial position (only used when the viewer uses its own camera).
-        if (!options.initialCameraPosition) options.initialCameraPosition = [0, 10, 15];
-        this.initialCameraPosition = new THREE.Vector3().fromArray(options.initialCameraPosition);
-
-        // The initial focal point of the camera and center of the camera's orbit (only used when the viewer uses its own camera).
-        if (!options.initialCameraLookAt) options.initialCameraLookAt = [0, 0, 0];
-        this.initialCameraLookAt = new THREE.Vector3().fromArray(options.initialCameraLookAt);
+            // The initial focal point of the camera and center of the camera's orbit (only used when the viewer uses its own camera).
+            if (!options.initialCameraLookAt) options.initialCameraLookAt = [0, 0, 0];
+            this.initialCameraLookAt = new THREE.Vector3().fromArray(options.initialCameraLookAt);
+        }
 
         // 'dropInMode' is a flag that is used internally to support the usage of the viewer as a Three.js scene object
         this.dropInMode = options.dropInMode || false;
@@ -359,9 +360,12 @@ export class Viewer {
                 this.webXRActive = false;
             });
             this.renderer.xr.enabled = true;
-            this.camera.position.copy(this.initialCameraPosition);
-            this.camera.up.copy(this.cameraUp).normalize();
-            this.camera.lookAt(this.initialCameraLookAt);
+
+            if (!this.usingExternalCamera) {
+                this.camera.position.copy(this.initialCameraPosition);
+                this.camera.up.copy(this.cameraUp).normalize();
+                this.camera.lookAt(this.initialCameraLookAt);
+            }
         }
     }
 
